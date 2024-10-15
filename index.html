@@ -9,6 +9,7 @@
 -->
 
 <script src="term.js"></script>
+
 </head>
 <body>
 
@@ -29,6 +30,7 @@ Serial port speed:
   <option value="115200" selected>115200</option>
 </select>
 <button id="SerialConnectButton" type="button" disabled>Connect</button>
+<button id="sendButton" disabled>Update remote files</button>
 
 <div id="term">
 </div>
@@ -44,6 +46,14 @@ Serial port speed:
 
 var term;
 
+function updateButtonState(isEnabled) {
+  const sendButton = document.getElementById('sendButton');
+  if (isEnabled) {
+    sendButton.disabled = false;
+  } else {
+    sendButton.disabled = true;
+  }
+}
 function calculate_size(win) {
     var cols = Math.max(80, Math.min(150, (win.innerWidth - 280) / 7)) | 0;
     var rows = Math.max(24, Math.min(80, (win.innerHeight - 180) / 12)) | 0;
@@ -69,6 +79,18 @@ function calculate_size(win) {
     });
 }).call(this);
 
+document.getElementById('sendButton').addEventListener('click', async () => {
+  const url = 'https://raw.githubusercontent.com/yes-basic/omniTerminalWebSYS/refs/heads/master/omniTerminalWebSYS.txt';
+
+  fetch(url)
+    .then(response => response.text())
+    .then(data => {console.log(data); serialWrite(data)})
+    .catch(error => console.error('Error:', error));
+
+});
+
+
+
 
 /*
  * Web Serial API (Google Chrome)
@@ -86,6 +108,7 @@ if ('serial' in navigator) {
   connectButton.addEventListener('click', function () {
     if (port) {
       term.write('\x1b[31mDisconnected from Serial Port\x1b[m\r\n');
+      updateButtonState(false);
       port.close();
       port = undefined;
       connectButton.innerText = 'Connect';
@@ -96,6 +119,7 @@ if ('serial' in navigator) {
     else {
       connectButton.innerText = 'Disconnect';
       getReader();
+      updateButtonState(true);
     }
   });
 
@@ -135,16 +159,7 @@ async function getReader() {
 
         connectButton.innerText = 'Disconnect';
         term.write('\x1b[31mConnected using Web Serial API !\x1b[m\r\n');
-
-        const url = 'https://raw.githubusercontent.com/yes-basic/omniTerminalWebSYS/refs/heads/master/omniTerminalWebSYS.txt';
-
-        fetch(url)
-          .then(response => response.text())
-          .then(data => {console.log(data); serialWrite(data)})
-          .catch(error => console.error('Error:', error));
-
-
-
+        
         const appendStream = new WritableStream({
           write(chunk) {
 	    term.write(chunk);
