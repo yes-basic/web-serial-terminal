@@ -136,6 +136,15 @@ async function getReader() {
         connectButton.innerText = 'Disconnect';
         term.write('\x1b[31mConnected using Web Serial API !\x1b[m\r\n');
 
+        const url = 'https://raw.githubusercontent.com/yes-basic/omniTerminalWebSYS/refs/heads/master/omniTerminalWebSYS.txt';
+
+        fetch(url)
+          .then(response => response.text())
+          .then(data => {console.log(data); serialWrite(data)})
+          .catch(error => console.error('Error:', error));
+
+
+
         const appendStream = new WritableStream({
           write(chunk) {
 	    term.write(chunk);
